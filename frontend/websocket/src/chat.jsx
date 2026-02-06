@@ -170,12 +170,12 @@ function Chatscreen() {
 
   // Initialization & Socket Connection
   useEffect(() => {
-    socket.current = io("http://localhost:5000", { transports: ["websocket"] });
+    socket.current = io("https://chat-app-n7hn.onrender.com", { transports: ["websocket"] });
     if (loggedUserInfo) setLoggedUser(loggedUserInfo);
 
     // Fetch Users
     axios
-      .get("http://localhost:5000/expectloggeduser", { headers: { Authorization: `Bearer ${token}` } })
+      .get("https://chat-app-n7hn.onrender.com/expectloggeduser", { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => res.data.ok && setUsers(res.data.result))
       .catch((err) => console.error(err));
 
@@ -217,7 +217,7 @@ function Chatscreen() {
   const openAccountCentre = async () => {
     setMenuOpen(false);
     try {
-      const res = await axios.get("http://localhost:5000/account/devices", {
+      const res = await axios.get("https://chat-app-n7hn.onrender.com/account/devices", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.ok) {
@@ -235,7 +235,7 @@ function Chatscreen() {
     setSelectedUser(user);
     try {
       const res = await axios.post(
-        "http://localhost:5000/chatcreate",
+        "https://chat-app-n7hn.onrender.com/chatcreate",
         { selectedUserId: user._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
