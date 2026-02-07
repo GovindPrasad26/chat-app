@@ -16,7 +16,7 @@ const SignUpForm = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/signup", {
+      const response = await axios.post("https://chat-app-n7hn.onrender.com/signup", {
         firstName,
         email,
         password,

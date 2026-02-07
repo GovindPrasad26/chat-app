@@ -107,7 +107,7 @@ const LoginForm = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/login", {
+      const response = await axios.post("https://chat-app-n7hn.onrender.com/login", {
         email,
         password,
       });
