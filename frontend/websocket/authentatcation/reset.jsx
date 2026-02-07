@@ -19,7 +19,7 @@ const ForgotPassword = () => {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/forgot-password", { email });
+      const res = await axios.post("https://chat-app-n7hn.onrender.com/forgot-password", { email });
       setMessage(res.data.message);
 
       // ✅ Redirect to sign-in page after 2 seconds

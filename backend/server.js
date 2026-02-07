@@ -92,7 +92,64 @@ app.get("/expectloggeduser", verifytoken, async (req, res) => {
   res.json({ ok: true, result: users });
 });
 
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
 
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const user = await usersCollection.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate a new random password (8 characters)
+    const newPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+console.log("Generated new password:", newPassword);
+console.log("Hashed password:", hashedPassword);
+
+    // Update the new password in the database
+    await usersCollection.updateOne(
+      { email },
+      { $set: { password: hashedPassword } }
+    );
+
+    // Setup Nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "rajeshkilladi96@gmail.com", // 👉 your sender Gmail
+        pass: "lklg cuzq bvie nauv",   // 👉 Gmail App Password
+      },
+    });
+
+    // Email content
+    const mailOptions = {
+      from: "yourgmail@gmail.com", // sender
+      to: email,                   // recipient
+      subject: "Your New Password",
+      html: `
+        <h3>Hello ${user.firstName || "User"},</h3>
+        <p>Your password has been reset successfully.</p>
+        <p>Your new password is: <b>${newPassword}</b></p>
+        <p>You can log in using this password and change it later.</p>
+        <br>
+        <p>Best regards,<br><b>Your App Team</b></p>
+      `,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: "New password sent to your email successfully!" });
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+});
 
 app.post("/signup", async (req, res) => {
   const { firstName, email, password, phone } = req.body;
