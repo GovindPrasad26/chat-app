@@ -122,8 +122,8 @@ console.log("Hashed password:", hashedPassword);
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "rajeshkilladi96@gmail.com", // 👉 your sender Gmail
-        pass: "lklg cuzq bvie nauv",   // 👉 Gmail App Password
+        user: process.env.EMAIL_USER, // 👉 your sender Gmail
+        pass: process.env.EMAIL_PASS,   // 👉 Gmail App Password
       },
     });
 
