@@ -1,5 +1,5 @@
 require('dotenv').config();
-const nodemailer = require("nodemailer");
+
 
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
@@ -10,6 +10,9 @@ const http = require("http");
 const socketio = require('socket.io');
 const UAParser = require("ua-parser-js");
 const compression = require("compression");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 
 const app = express();
@@ -95,10 +98,7 @@ app.get("/expectloggeduser", verifytoken, async (req, res) => {
 
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
-
-  if (!email) {
-    return res.status(400).json({ message: "Email is required" });
-  }
+  if (!email) return res.status(400).json({ message: "Email is required" });
 
   try {
     const user = await usersCollection.findOne({ email });
@@ -106,51 +106,36 @@ app.post("/forgot-password", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate a new random password (8 characters)
+    // generate password
     const newPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-console.log("Generated new password:", newPassword);
-console.log("Hashed password:", hashedPassword);
 
-    // Update the new password in the database
+    // send email FIRST
+    await resend.emails.send({
+      from: "Your App <onboarding@resend.dev>", // works without domain
+      to: email,
+      subject: "Your New Password",
+      html: `
+        <h3>Hello ${user.firstName || "User"},</h3>
+        <p>Your password has been reset.</p>
+        <p><b>New Password:</b> ${newPassword}</p>
+        <p>Please login and change it immediately.</p>
+      `,
+    });
+
+    // update password ONLY if email success
     await usersCollection.updateOne(
       { email },
       { $set: { password: hashedPassword } }
     );
 
-    // Setup Nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER, // 👉 your sender Gmail
-        pass: process.env.EMAIL_PASS,   // 👉 Gmail App Password
-      },
-    });
-
-    // Email content
-    const mailOptions = {
-      from: "yourgmail@gmail.com", // sender
-      to: email,                   // recipient
-      subject: "Your New Password",
-      html: `
-        <h3>Hello ${user.firstName || "User"},</h3>
-        <p>Your password has been reset successfully.</p>
-        <p>Your new password is: <b>${newPassword}</b></p>
-        <p>You can log in using this password and change it later.</p>
-        <br>
-        <p>Best regards,<br><b>Your App Team</b></p>
-      `,
-    };
-
-    // Send email
-    await transporter.sendMail(mailOptions);
-
-    res.json({ message: "New password sent to your email successfully!" });
+    res.json({ message: "New password sent to your email!" });
   } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ message: "Something went wrong" });
+    console.error("Resend error:", err);
+    res.status(500).json({ message: "Failed to send email" });
   }
 });
+
 
 app.post("/signup", async (req, res) => {
   const { firstName, email, password, phone } = req.body;
