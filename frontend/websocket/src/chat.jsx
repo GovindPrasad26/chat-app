@@ -341,7 +341,7 @@ function Chatscreen() {
                       </div>
                       <div className="dev-info">
                         <strong>{dev.os} • {dev.browser}</strong>
-                        <span>IP: {dev.ipAddress}</span>
+                        {/* <span>IP: {dev.ipAddress}</span> */}
                         <small>{new Date(dev.loginAt).toLocaleString()}</small>
                       </div>
                       {idx === 0 && <span className="active-badge">Active</span>}
